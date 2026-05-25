@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>🐾 猫咪健康档案</title>
+<style>
+:root {
+    --cat-a-color: #4CAF50;
+    --cat-b-color: #2196F3;
+}
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; margin: 0; padding: 12px; padding-bottom: 80px; }
+.header { text-align: center; padding: 10px 0 15px; }
+.header h1 { margin: 0; font-size: 24px; color: #333; }
+.header p { margin: 5px 0 0; color: #666; font-size: 14px; }
+
+/* 猫咪档案卡 */
+.cat-switcher { display: flex; gap: 10px; margin-bottom: 15px; }
+.cat-card { flex: 1; background: white; border-radius: 16px; padding: 15px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: transform 0.2s; }
+.cat-card.active { transform: scale(1.03); box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 2px solid var(--cat-a-color); }
+.cat-card:nth-child(2).active { border-color: var(--cat-b-color); }
+.cat-name { font-size: 22px; font-weight: bold; margin-bottom: 10px; outline: none; padding: 4px; border-radius: 6px; }
+.cat-name:focus { background: #f0f8ff; }
+.cat-meta { display: flex; justify-content: space-around; font-size: 13px; color: #666; margin-top: 8px; }
+.cat-meta div { padding: 6px 8px; border-radius: 6px; outline: none; }
+.cat-meta div:focus { background: #f0f8ff; }
+
+/* 操作按钮 */
+.action-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+.btn { padding: 18px 5px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; touch-action: manipulation; }
+.btn-pee { background: #607D8B; }
+.btn-poo { background: #795548; }
+.btn-vomit { background: #F44336; }
+
+/* 健康记录区 */
+.health-section { background: white; border-radius: 16px; padding: 15px; margin-bottom: 20px; }
+.section-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 12px; display: flex; align-items: center; }
+.section-title span { margin-right: 8px; }
+select, input[type="text"] {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;
+    font-size: 15px; margin-top: 8px; background: #fafafa; box-sizing: border-box;
+}
+.health-btn {
+    width: 100%; margin-top: 12px; padding: 14px;
+    background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+    color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; cursor: pointer; touch-action: manipulation;
+}
+
+/* 记录列表 */
+.log-list { background: white; border-radius: 12px; overflow: hidden; margin-bottom: 15px; }
+.log-item { display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; }
+.log-item:last-child { border-bottom: none; }
+.cat-tag { width: 24px; height: 24px; border-radius: 50%; color: white; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-right: 12px; flex-shrink: 0; }
+.cat-tag.a { background: var(--cat-a-color); }
+.cat-tag.b { background: var(--cat-b-color); }
+.log-info { flex-grow: 1; }
+.log-type { font-weight: 500; font-size: 15px; }
+.log-health { font-size: 12px; color: #E91E63; margin-top: 2px; }
+.log-time { font-size: 12px; color: #999; margin-top: 2px; }
+.log-cat-name { font-size: 13px; color: #666; }
+
+/* 底部操作 */
+.fab-export { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; border: none; border-radius: 50%; width: 56px; height: 56px; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer; }
+.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px; opacity: 0; transition: opacity 0.3s; }
+.toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🐾 双猫健康档案</h1>
+    <p id="todayDate"></p>
+</div>
+
+<!-- 猫咪档案卡 -->
+<div class="cat-switcher">
+    <div class="cat-card active" id="catCardA" onclick="switchCat('A')">
+        <div class="cat-name" contenteditable="true" id="nameA" onblur="saveProfile()">猫咪A</div>
+        <div class="cat-meta">
+            <div contenteditable="true" inputmode="numeric" id="ageA" onblur="saveProfile()">🎂 0 岁</div>
+            <div contenteditable="true" inputmode="decimal" id="weightA" onblur="saveProfile()">⚖️ 0 kg</div>
+        </div>
+    </div>
+    <div class="cat-card" id="catCardB" onclick="switchCat('B')">
+        <div class="cat-name" contenteditable="true" id="nameB" onblur="saveProfile()">猫咪B</div>
+        <div class="cat-meta">
+            <div contenteditable="true" inputmode="numeric" id="ageB" onblur="saveProfile()">🎂 0 岁</div>
+            <div contenteditable="true" inputmode="decimal" id="weightB" onblur="saveProfile()">⚖️ 0 kg</div>
+        </div>
+    </div>
+</div>
+
+<!-- 排泄记录 -->
+<div class="action-buttons">
+    <button class="btn btn-pee" ontouchstart="recordToilet('💧 尿')">💧 尿</button>
+    <button class="btn btn-poo" ontouchstart="recordToilet('💩 屎')">💩 屎</button>
+    <button class="btn btn-vomit" ontouchstart="recordToilet('🤮 呕吐')">🤮 呕吐</button>
+</div>
+
+<!-- 健康记录 -->
+<div class="health-section">
+    <div class="section-title"><span>💊</span> 健康/用药记录</div>
+    <select id="healthSelect" onchange="toggleCustomInput()">
+        <option value="">请选择项目...</option>
+        <option value="益生菌">益生菌</option>
+        <option value="化毛片">化毛片</option>
+        <option value="鱼油">鱼油</option>
+        <option value="乳木果糖">乳木果糖</option>
+        <option value="外驱">外驱</option>
+        <option value="疫苗">疫苗</option>
+        <option value="__custom__">其它（手动输入）</option>
+    </select>
+    <input type="text" id="customHealthInput" placeholder="请输入具体名称..." style="display:none;">
+    <button class="health-btn" ontouchstart="recordHealth()">✅ 记录健康项</button>
+</div>
+
+<!-- 今日记录 -->
+<div class="section-title">📋 今日记录</div>
+<div class="log-list" id="logList"></div>
+
+<!-- 历史记录 -->
+<div class="section-title">📅 最近记录</div>
+<div class="log-list" id="historyList"></div>
+
+<button class="fab-export" onclick="exportCSV()" title="导出数据">📥</button>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'DUAL_CAT_HEALTH_PROFILE';
+let currentCat = 'A';
+let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+
+// 初始化数据结构
+if (!data.cats) {
+    data = {
+        cats: {
+            A: { name: '猫咪A', age: 0, weight: 0 },
+            B: { name: '猫咪B', age: 0, weight: 0 }
+        },
+        logs: []
+    };
+}
+
+document.getElementById('todayDate').innerText = new Date().toLocaleDateString('zh-CN', {year:'numeric', month:'long', day:'numeric', weekday:'long'});
+loadProfile();
+
+// 切换自定义输入框显示
+function toggleCustomInput() {
+    const select = document.getElementById('healthSelect');
+    const customInput = document.getElementById('customHealthInput');
+    if (select.value === '__custom__') {
+        customInput.style.display = 'block';
+        customInput.focus();
+    } else {
+        customInput.style.display = 'none';
+    }
+}
+
+function loadProfile() {
+    document.getElementById('nameA').innerText = data.cats.A.name;
+    document.getElementById('ageA').innerText = `🎂 ${data.cats.A.age} 岁`;
+    document.getElementById('weightA').innerText = `⚖️ ${data.cats.A.weight} kg`;
+    document.getElementById('nameB').innerText = data.cats.B.name;
+    document.getElementById('ageB').innerText = `🎂 ${data.cats.B.age} 岁`;
+    document.getElementById('weightB').innerText = `⚖️ ${data.cats.B.weight} kg`;
+}
+
+function saveProfile() {
+    // 提取纯数字
+    const ageA = document.getElementById('ageA').innerText.match(/\d+/);
+    const weightA = document.getElementById('weightA').innerText.match(/[\d.]+/);
+    const ageB = document.getElementById('ageB').innerText.match(/\d+/);
+    const weightB = document.getElementById('weightB').innerText.match(/[\d.]+/);
+    
+    data.cats.A.name = document.getElementById('nameA').innerText.trim();
+    data.cats.A.age = ageA ? parseInt(ageA[0]) : 0;
+    data.cats.A.weight = weightA ? parseFloat(weightA[0]) : 0;
+    
+    data.cats.B.name = document.getElementById('nameB').innerText.trim();
+    data.cats.B.age = ageB ? parseInt(ageB[0]) : 0;
+    data.cats.B.weight = weightB ? parseFloat(weightB[0]) : 0;
+    
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function switchCat(cat) {
+    currentCat = cat;
+    document.getElementById('catCardA').classList.toggle('active', cat === 'A');
+    document.getElementById('catCardB').classList.toggle('active', cat === 'B');
+    render();
+}
+
+// 记录排泄/呕吐
+function recordToilet(type) {
+    const catData = data.cats[currentCat];
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const dateStr = now.toISOString().slice(0,10);
+    
+    const newLog = {
+        cat: currentCat,
+        catName: catData.name,
+        type: type,
+        health: '',
+        time: timeStr,
+        date: dateStr,
+        ts: now.getTime()
+    };
+    
+    data.logs.unshift(newLog);
+    persist();
+    showToast(`${catData.name} ${type} 记录成功！`);
+}
+
+// 记录健康项
+function recordHealth() {
+    const select = document.getElementById('healthSelect');
+    let healthType = select.value;
+    const customInput = document.getElementById('customHealthInput');
+    
+    // 处理自定义输入
+    if (healthType === '__custom__') {
+        healthType = customInput.value.trim();
+        if (!healthType) {
+            showToast("请输入具体内容");
+            customInput.focus();
+            return;
+        }
+    }
+    
+    if (!healthType) {
+        showToast("请选择或输入健康项目");
+        return;
+    }
+    
+    const catData = data.cats[currentCat];
+    const now = new Date();
+    const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+    const dateStr = now.toISOString().slice(0,10);
+    
+    const newLog = {
+        cat: currentCat,
+        catName: catData.name,
+        type: '💊 健康',
+        health: healthType,
+        time: timeStr,
+        date: dateStr,
+        ts: now.getTime()
+    };
+    
+    // 添加到日志数组
+    data.logs.unshift(newLog);
+    
+    // 重置表单
+    select.value = "";
+    customInput.value = "";
+    customInput.style.display = "none";
+    
+    persist();
+    showToast(`${catData.name} 服用 ${healthType} 记录成功！`);
+}
+
+function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    render();
+}
+
+function render() {
+    const today = new Date().toISOString().slice(0,10);
+    const todayLogs = data.logs.filter(l => l.date === today);
+    
+    const countA = todayLogs.filter(l => l.cat === 'A').length;
+    const countB = todayLogs.filter(l => l.cat === 'B').length;
+    
+    // 更新统计显示
+    const statsA = document.getElementById('statsA');
+    const statsB = document.getElementById('statsB');
+    if (statsA) statsA.innerText = `今日：${countA}次`;
+    if (statsB) statsB.innerText = `今日：${countB}次`;
+
+    const logListEl = document.getElementById('logList');
+    const filteredLogs = todayLogs.filter(l => l.cat === currentCat);
+
+    if (filteredLogs.length === 0) {
+        logListEl.innerHTML = '<div style="padding: 30px; text-align: center; color: #999;">今天这只猫还没记录哦～</div>';
+    } else {
+        logListEl.innerHTML = filteredLogs.map(l => `
+            <div class="log-item">
+                <div class="cat-tag ${l.cat === 'A' ? 'a' : 'b'}">${l.cat}</div>
+                <div class="log-info">
+                    <div class="log-type">${l.type} ${l.health ? '- ' + l.health : ''}</div>
+                    <div class="log-time">${l.time}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    const historyEl = document.getElementById('historyList');
+    const recentLogs = data.logs.slice(0, 5);
+    historyEl.innerHTML = recentLogs.map(l => `
+        <div class="log-item">
+            <div class="cat-tag ${l.cat === 'A' ? 'a' : 'b'}">${l.cat}</div>
+            <div class="log-info">
+                <div class="log-type">${l.type} ${l.health ? '- ' + l.health : ''}</div>
+                <div class="log-time">${l.date} ${l.time}</div>
+            </div>
+            <div class="log-cat-name">${l.catName}</div>
+        </div>
+    `).join('');
+}
+
+function exportCSV() {
+    if (data.logs.length === 0) { showToast("暂无数据"); return; }
+    let csv = "日期,时间,猫咪,年龄(岁),体重(kg),类型,健康项目\n";
+    data.logs.sort((a,b) => b.ts - a.ts).forEach(l => {
+        const catInfo = data.cats[l.cat];
+        csv += `${l.date},${l.time},${l.catName},${catInfo.age},${catInfo.weight},${l.type},${l.health || '无'}\n`;
+    });
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `双猫健康档案_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    showToast("导出成功！");
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.innerText = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+render();
+</script>
+</body>
+</html>
+
