@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="猫咪日记">
+<title>🐱 猫咪健康日记</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root {
+    --bg: #fdf6ee;
+    --surface: #fff8f0;
+    --card: #ffffff;
+    --accent1: #e07b5a;
+    --accent2: #8bbf9d;
+    --accent3: #f0c97a;
+    --text: #3a2e28;
+    --muted: #9a8880;
+    --border: #e8ddd5;
+    --shadow: 0 2px 16px rgba(80,40,20,0.08);
+    --radius: 16px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'Noto Serif SC', 'PingFang SC', serif;
+    color: var(--text);
+    overflow: hidden;
+  }
+  .app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--bg);
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #e07b5a 0%, #c5634a 100%);
+    padding: calc(var(--safe-top) + 16px) 20px 18px;
+    border-radius: 0 0 24px 24px;
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    z-index: 2;
+  }
+  .header::before {
+    content: '';
+    position: absolute; right: -30px; top: -30px;
+    width: 160px; height: 160px; border-radius: 50%;
+    background: rgba(255,255,255,0.08);
+  }
+  .header-title { font-family: 'ZCOOL XiaoWei', 'PingFang SC', serif; font-size: 24px; color: #fff; letter-spacing: 3px; text-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .header-sub { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 3px; letter-spacing: 1px; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex; gap: 10px;
+    padding: 14px 16px 0;
+    flex-shrink: 0;
+  }
+  .tab {
+    flex: 1; padding: 11px 8px;
+    border-radius: 12px;
+    border: 2px solid var(--border);
+    background: var(--card);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px; font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+  }
+  .tab.active {
+    background: var(--accent1);
+    border-color: var(--accent1);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(224,123,90,0.3);
+  }
+
+  /* ── Scroll area ── */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 0 calc(var(--safe-bottom) + 20px);
+  }
+
+  /* ── Cat Card ── */
+  .cat-card {
+    margin: 12px 16px 0;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border: 1.5px solid var(--border);
+    position: relative;
+  }
+  .cat-avatar {
+    width: 58px; height: 58px; border-radius: 50%;
+    background: linear-gradient(135deg, #f8d9c8 0%, #f0c4a8 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 30px; flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(224,123,90,0.2);
+  }
+  .cat-info { flex: 1; min-width: 0; }
+  .cat-name { font-family: 'ZCOOL XiaoWei', serif; font-size: 20px; color: var(--text); letter-spacing: 2px; }
+  .cat-meta { display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+  .cat-meta-item { font-size: 11px; color: var(--muted); background: var(--bg); padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border); }
+  .edit-btn {
+    position: absolute; top: 12px; right: 12px;
+    background: none; border: 1.5px solid var(--border);
+    border-radius: 8px; padding: 4px 10px;
+    font-size: 12px; color: var(--muted);
+    cursor: pointer;
+    font-family: 'Noto Serif SC', serif;
+  }
+
+  /* ── Date bar ── */
+  .date-bar {
+    margin: 12px 16px 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .date-label { font-size: 12px; color: var(--muted); white-space: nowrap; letter-spacing: 1px; }
+  .date-input {
+    flex: 1;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px; color: var(--text);
+    background: var(--card);
+    outline: none;
+  }
+
+  /* ── Section ── */
+  .section {
+    margin: 12px 16px 0;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    border: 1.5px solid var(--border);
+  }
+  .section-title {
+    font-size: 12px; font-weight: 700;
+    color: var(--muted); letter-spacing: 2px;
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .section-title::before {
+    content: ''; display: block;
+    width: 4px; height: 15px;
+    background: var(--accent1); border-radius: 2px;
+  }
+
+  /* ── Counters ── */
+  .count-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .count-row:last-child { border-bottom: none; }
+  .count-label { display: flex; align-items: center; gap: 8px; font-size: 15px; }
+  .count-icon { font-size: 20px; }
+  .counter { display: flex; align-items: center; }
+  .counter button {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 20px; color: var(--accent1);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    transition: all 0.12s;
+    -webkit-user-select: none; user-select: none;
+  }
+  .counter button:active { background: var(--accent1); color: #fff; border-color: var(--accent1); transform: scale(0.92); }
+  .counter span {
+    min-width: 42px; text-align: center;
+    font-size: 22px; font-weight: 700; color: var(--text);
+  }
+
+  /* ── Meds ── */
+  .meds-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .med-chip {
+    padding: 8px 14px; border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 13px; color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: 'Noto Serif SC', serif;
+    -webkit-user-select: none; user-select: none;
+  }
+  .med-chip.on {
+    background: var(--accent2);
+    border-color: var(--accent2);
+    color: #fff; font-weight: 600;
+  }
+  .med-chip:active { transform: scale(0.95); }
+  .other-input {
+    width: 100%; margin-top: 10px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 9px 12px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px; color: var(--text);
+    background: var(--surface); outline: none;
+  }
+  .other-input:focus { border-color: var(--accent2); }
+
+  /* ── Note ── */
+  .note-textarea {
+    width: 100%;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px 12px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px; color: var(--text);
+    background: var(--surface); outline: none;
+    resize: none; min-height: 72px;
+  }
+  .note-textarea:focus { border-color: var(--accent3); }
+
+  /* ── History ── */
+  .history-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .history-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 300px; }
+  .history-table th { color: var(--muted); font-weight: 600; padding: 6px 6px; text-align: center; border-bottom: 1.5px solid var(--border); letter-spacing: 1px; }
+  .history-table td { padding: 8px 6px; text-align: center; border-bottom: 1px solid var(--border); color: var(--text); }
+  .history-table tr:last-child td { border-bottom: none; }
+  .history-table tr.today-row td { background: #fff7f3; font-weight: 700; color: var(--accent1); }
+  .history-table tr { cursor: pointer; }
+  .badge { display: inline-block; background: var(--accent3); color: var(--text); border-radius: 8px; padding: 1px 7px; font-size: 11px; }
+
+  /* ── Modal ── */
+  .modal-bg {
+    position: fixed; inset: 0;
+    background: rgba(40,20,10,0.45);
+    z-index: 200;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal {
+    background: var(--card);
+    border-radius: 20px;
+    padding: 26px 22px;
+    width: 100%; max-width: 340px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+  }
+  .modal-title { font-family: 'ZCOOL XiaoWei', serif; font-size: 20px; margin-bottom: 18px; letter-spacing: 2px; color: var(--text); }
+  .modal label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 5px; margin-top: 14px; letter-spacing: 1px; }
+  .modal input {
+    width: 100%;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px 12px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px; color: var(--text);
+    background: var(--bg); outline: none;
+  }
+  .modal input:focus { border-color: var(--accent1); }
+  .modal-btns { display: flex; gap: 10px; margin-top: 22px; }
+  .modal-btns button {
+    flex: 1; padding: 12px;
+    border-radius: 12px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+  .btn-cancel { background: var(--bg); border: 1.5px solid var(--border); color: var(--muted); }
+  .btn-save { background: var(--accent1); border: none; color: #fff; box-shadow: 0 4px 12px rgba(224,123,90,0.3); }
+  .btn-save:active { transform: scale(0.97); }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed; bottom: calc(var(--safe-bottom) + 30px); left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(58,46,40,0.88);
+    color: #fff; border-radius: 20px;
+    padding: 10px 20px; font-size: 13px;
+    opacity: 0; transition: all 0.3s;
+    pointer-events: none; white-space: nowrap;
+    z-index: 999;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">🐱 猫咪健康日记</div>
+    <div class="header-sub">记录每一天的毛孩子状态</div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabs"></div>
+
+  <!-- Scroll area -->
+  <div class="scroll-area" id="scrollArea">
+    <!-- Cat card -->
+    <div class="cat-card" id="catCard">
+      <div class="cat-avatar" id="catAvatar" onclick="document.getElementById('avatarInput').click()" style="cursor:pointer;position:relative;overflow:hidden;">
+        <span id="catAvatarEmoji">😺</span>
+        <img id="catAvatarImg" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;position:absolute;inset:0;">
+        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.35);color:#fff;font-size:10px;text-align:center;padding:3px 0;letter-spacing:0.5px;">换头像</div>
+      </div>
+      <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(event)">
+      <div class="cat-info">
+        <div class="cat-name" id="catName">猫咪一</div>
+        <div class="cat-meta" id="catMeta"></div>
+      </div>
+      <button class="edit-btn" id="editBtn">编辑</button>
+    </div>
+
+    <!-- Date -->
+    <div class="date-bar">
+      <span class="date-label">📅 日期</span>
+      <input class="date-input" type="date" id="dateInput">
+    </div>
+
+    <!-- Counts -->
+    <div class="section">
+      <div class="section-title">今日如厕 &amp; 呕吐</div>
+      <div class="count-row">
+        <div class="count-label"><span class="count-icon">💧</span> 小便次数</div>
+        <div class="counter">
+          <button onclick="adjust('pee',-1)">−</button>
+          <span id="val-pee">0</span>
+          <button onclick="adjust('pee',1)">+</button>
+        </div>
+      </div>
+      <div class="count-row">
+        <div class="count-label"><span class="count-icon">💩</span> 大便次数</div>
+        <div class="counter">
+          <button onclick="adjust('poo',-1)">−</button>
+          <span id="val-poo">0</span>
+          <button onclick="adjust('poo',1)">+</button>
+        </div>
+      </div>
+      <div class="count-row">
+        <div class="count-label"><span class="count-icon">🤢</span> 呕吐次数</div>
+        <div class="counter">
+          <button onclick="adjust('vomit',-1)">−</button>
+          <span id="val-vomit">0</span>
+          <button onclick="adjust('vomit',1)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meds -->
+    <div class="section">
+      <div class="section-title">药物 / 营养品</div>
+      <div class="meds-grid" id="medsGrid"></div>
+      <input class="other-input" id="otherMedInput" placeholder="请输入其他药物或营养品名称…" style="display:none" oninput="saveOtherMed(this.value)">
+    </div>
+
+    <!-- Note -->
+    <div class="section">
+      <div class="section-title">备注</div>
+      <textarea class="note-textarea" id="noteInput" placeholder="今天有什么特别的事情想记录吗？" oninput="saveNote(this.value)"></textarea>
+    </div>
+
+    <!-- History -->
+    <div class="section" style="margin-bottom:0">
+      <div class="section-title">近7天记录</div>
+      <div class="history-scroll">
+        <table class="history-table">
+          <thead><tr><th>日期</th><th>小便</th><th>大便</th><th>呕吐</th><th>用药</th></tr></thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-bg" id="editModal" style="display:none" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">✏️ 编辑猫咪信息</div>
+    <label>名字</label>
+    <input id="editName" placeholder="猫咪名字">
+    <label>年龄（岁）</label>
+    <input id="editAge" type="number" min="0" step="0.5" placeholder="例：2">
+    <label>体重（kg）</label>
+    <input id="editWeight" type="number" min="0" step="0.1" placeholder="例：4.5">
+    <label>性别</label>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button type="button" id="genderMale" onclick="selectGender('男')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-family:'Noto Serif SC',serif;cursor:pointer;transition:all 0.15s">♂️ 男生</button>
+      <button type="button" id="genderFemale" onclick="selectGender('女')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);font-size:14px;font-family:'Noto Serif SC',serif;cursor:pointer;transition:all 0.15s">♀️ 女生</button>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="document.getElementById('editModal').style.display='none'">取消</button>
+      <button class="btn-save" onclick="saveEdit()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────
+const MEDS = ['猫草片','化毛膏','益生菌','乳果糖','疫苗','驱虫药','其他'];
+const EMOJIS = { cat1: '😺', cat2: '😸' };
+
+let state = {
+  cats: {
+    cat1: { name: '猫咪一', age: '', weight: '', gender: '', avatar: '' },
+    cat2: { name: '猫咪二', age: '', weight: '', gender: '', avatar: '' }
+  },
+  records: {},   // key: "catId_YYYY-MM-DD"
+  activeTab: 'cat1',
+  date: todayStr()
+};
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().slice(0,10);
+}
+
+function recKey(catId, date) { return `${catId}_${date}`; }
+
+function getRec(catId, date) {
+  const k = recKey(catId, date);
+  if (!state.records[k]) state.records[k] = { pee:0, poo:0, vomit:0, meds:[], otherMed:'', note:'' };
+  return state.records[k];
+}
+
+// ── Persist ────────────────────────────────────────────
+function save() {
+  try { localStorage.setItem('catHealthApp', JSON.stringify(state)); } catch(e) {}
+}
+function load() {
+  try {
+    const s = localStorage.getItem('catHealthApp');
+    if (s) {
+      const parsed = JSON.parse(s);
+      state = { ...state, ...parsed };
+      // Ensure today date on load
+      state.date = todayStr();
+    }
+  } catch(e) {}
+}
+
+// ── Render ─────────────────────────────────────────────
+function render() {
+  const { activeTab, date } = state;
+  const cat = state.cats[activeTab];
+  const rec = getRec(activeTab, date);
+
+  // Tabs
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = Object.entries(state.cats).map(([id, c]) =>
+    `<button class="tab ${id === activeTab ? 'active' : ''}" onclick="switchTab('${id}')">${c.name || id}</button>`
+  ).join('');
+
+  // Cat card
+  const emoji = document.getElementById('catAvatarEmoji');
+  const img = document.getElementById('catAvatarImg');
+  if (cat.avatar) {
+    img.src = cat.avatar;
+    img.style.display = 'block';
+    emoji.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    emoji.style.display = '';
+    emoji.textContent = EMOJIS[activeTab] || '🐱';
+  }
+  document.getElementById('catName').textContent = cat.name || '未命名';
+  document.getElementById('catMeta').innerHTML =
+    `<div class="cat-meta-item">🎂 ${cat.age ? cat.age + ' 岁' : '年龄未填'}</div>
+     <div class="cat-meta-item">⚖️ ${cat.weight ? cat.weight + ' kg' : '体重未填'}</div>
+     <div class="cat-meta-item">${cat.gender === '男' ? '♂️ 男生' : cat.gender === '女' ? '♀️ 女生' : '性别未填'}</div>`;
+
+  // Date
+  document.getElementById('dateInput').value = date;
+
+  // Counts
+  ['pee','poo','vomit'].forEach(f => {
+    document.getElementById('val-' + f).textContent = rec[f] || 0;
+  });
+
+  // Meds
+  const grid = document.getElementById('medsGrid');
+  grid.innerHTML = MEDS.map(m =>
+    `<div class="med-chip ${(rec.meds||[]).includes(m) ? 'on' : ''}" onclick="toggleMed('${m}')">${m}</div>`
+  ).join('');
+  const otherInput = document.getElementById('otherMedInput');
+  if ((rec.meds||[]).includes('其他')) {
+    otherInput.style.display = 'block';
+    otherInput.value = rec.otherMed || '';
+  } else {
+    otherInput.style.display = 'none';
+  }
+
+  // Note
+  document.getElementById('noteInput').value = rec.note || '';
+
+  // History
+  renderHistory();
+}
+
+function renderHistory() {
+  const { activeTab } = state;
+  const today = todayStr();
+  const rows = Array.from({length:7}, (_,i) => {
+    const d = new Date(); d.setDate(d.getDate() - (6-i));
+    return d.toISOString().slice(0,10);
+  });
+  const tbody = document.getElementById('historyBody');
+  tbody.innerHTML = rows.map(d => {
+    const r = getRec(activeTab, d);
+    const isToday = d === today;
+    const mc = (r.meds||[]).length;
+    const vStyle = r.vomit > 0 ? ' style="color:#e07b5a;font-weight:700"' : '';
+    return `<tr class="${isToday ? 'today-row' : ''}" onclick="jumpDate('${d}')">
+      <td>${d.slice(5)}${isToday ? ' 🐾' : ''}</td>
+      <td>${r.pee || '—'}</td>
+      <td>${r.poo || '—'}</td>
+      <td${vStyle}>${r.vomit || '—'}</td>
+      <td>${mc > 0 ? `<span class="badge">${mc}项</span>` : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Actions ────────────────────────────────────────────
+function switchTab(id) {
+  state.activeTab = id;
+  render();
+}
+
+function jumpDate(d) {
+  state.date = d;
+  document.getElementById('dateInput').value = d;
+  render();
+  document.getElementById('scrollArea').scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function adjust(field, delta) {
+  const rec = getRec(state.activeTab, state.date);
+  rec[field] = Math.max(0, (rec[field]||0) + delta);
+  document.getElementById('val-' + field).textContent = rec[field];
+  renderHistory();
+  save();
+}
+
+function toggleMed(med) {
+  const rec = getRec(state.activeTab, state.date);
+  const arr = rec.meds || [];
+  if (arr.includes(med)) {
+    rec.meds = arr.filter(m => m !== med);
+  } else {
+    rec.meds = [...arr, med];
+  }
+  const otherInput = document.getElementById('otherMedInput');
+  if (rec.meds.includes('其他')) {
+    otherInput.style.display = 'block';
+    otherInput.value = rec.otherMed || '';
+    otherInput.focus();
+  } else {
+    otherInput.style.display = 'none';
+  }
+  // Re-render chip states
+  document.querySelectorAll('.med-chip').forEach(el => {
+    el.classList.toggle('on', rec.meds.includes(el.textContent.trim()));
+  });
+  renderHistory();
+  save();
+}
+
+function saveOtherMed(v) {
+  getRec(state.activeTab, state.date).otherMed = v;
+  save();
+}
+
+function saveNote(v) {
+  getRec(state.activeTab, state.date).note = v;
+  save();
+}
+
+// ── Avatar upload ──────────────────────────────────────
+function uploadAvatar(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    // Resize to max 300px to save localStorage space
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const max = 300;
+      let w = img.width, h = img.height;
+      if (w > h) { h = Math.round(h * max / w); w = max; }
+      else { w = Math.round(w * max / h); h = max; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      state.cats[state.activeTab].avatar = canvas.toDataURL('image/jpeg', 0.75);
+      save();
+      render();
+      showToast('🐱 头像已更新');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = ''; // reset so same file can be re-selected
+}
+
+// ── Edit Modal ─────────────────────────────────────────
+document.getElementById('editBtn').onclick = () => {
+  const cat = state.cats[state.activeTab];
+  document.getElementById('editName').value = cat.name || '';
+  document.getElementById('editAge').value = cat.age || '';
+  document.getElementById('editWeight').value = cat.weight || '';
+  updateGenderButtons(cat.gender || '');
+  document.getElementById('editModal').style.display = 'flex';
+};
+
+let _selectedGender = '';
+function selectGender(g) {
+  _selectedGender = g;
+  updateGenderButtons(g);
+}
+function updateGenderButtons(g) {
+  _selectedGender = g;
+  const maleBtn = document.getElementById('genderMale');
+  const femaleBtn = document.getElementById('genderFemale');
+  maleBtn.style.background = g === '男' ? 'var(--accent1)' : 'var(--bg)';
+  maleBtn.style.color = g === '男' ? '#fff' : 'var(--text)';
+  maleBtn.style.borderColor = g === '男' ? 'var(--accent1)' : 'var(--border)';
+  femaleBtn.style.background = g === '女' ? 'var(--accent2)' : 'var(--bg)';
+  femaleBtn.style.color = g === '女' ? '#fff' : 'var(--text)';
+  femaleBtn.style.borderColor = g === '女' ? 'var(--accent2)' : 'var(--border)';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('editModal')) {
+    document.getElementById('editModal').style.display = 'none';
+  }
+}
+
+function saveEdit() {
+  const name = document.getElementById('editName').value.trim();
+  const age = document.getElementById('editAge').value.trim();
+  const weight = document.getElementById('editWeight').value.trim();
+  const gender = _selectedGender || state.cats[state.activeTab].gender || '';
+  state.cats[state.activeTab] = { ...state.cats[state.activeTab], name, age, weight, gender };
+  document.getElementById('editModal').style.display = 'none';
+  save();
+  render();
+  showToast('✅ 保存成功');
+}
+
+// ── Date input ─────────────────────────────────────────
+document.getElementById('dateInput').addEventListener('change', e => {
+  state.date = e.target.value;
+  render();
+});
+
+// ── Toast ──────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── Init ───────────────────────────────────────────────
+load();
+render();
+
+// Auto-save note on blur
+document.getElementById('noteInput').addEventListener('blur', () => save());
+</script>
+</body>
+</html>
